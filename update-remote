@@ -1,10 +1,43 @@
 #!/bin/bash
+neworg=$1
+if [[ $neworg == "" ]]; then
+    echo "usage:"
+    echo $0 "<neworg>"
+    echo "set the remote repositories to the new organization"
+    exit 1
+fi
+PWD=$(pwd)
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 # location of the script
 INFODIR=$(cd $DIR && cd .. && pwd)
 # location of the info201 root folder
-
+cd $DIR
+echo $1 >neworg
+# store the new organization
+oldorg=$(cat oldorg)
+##
+echo "Replacing $oldorg by $neworg in remotes"
 repos=$(find $INFODIR -name \.git -type d -print0 | xargs -0 dirname)
 for repo in $repos ; do
     echo "$repo"
+    cd "$repo"
+    oldurl=$(git remote -v | head -1 | sed 's/ (fetch)//g')
+    # this is in the form 'origin url'
+    newurl=$(echo $oldurl | sed "s|$oldorg|$neworg|")
+    echo '|'$oldurl'|'
+    echo '|'$newurl'|'
+    if [ "$oldurl" == "$newurl" ]; then
+	echo ----
+    fi
+    if [[ "$oldurl" != "$newurl" ]]; then
+	remote=$(echo $oldurl | sed 's/ .*//')
+	# print origin: old -> new
+	echo $remote: $(echo  $oldurl| sed 's/.* //') "->" $(echo  $newurl| sed 's/.* //')
+	# remove the 'origin' part
+    else
+	echo "nothing to be updated"
+    fi
 done
+
+cd "$PWD"
+echo "all done :-)"
