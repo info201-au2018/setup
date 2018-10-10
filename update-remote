@@ -1,0 +1,10 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+# location of the script
+INFODIR=$(cd $DIR && cd .. && pwd)
+# location of the info201 root folder
+
+repos=$(find $INFODIR -name \.git -type d -print0 | xargs -0 dirname)
+for repo in $repos ; do
+    echo "$repo"
+done
