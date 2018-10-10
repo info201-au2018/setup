@@ -17,27 +17,30 @@ echo $1 >neworg
 oldorg=$(cat oldorg)
 ##
 echo "Replacing $oldorg by $neworg in remotes"
+nRep=0
+nLeave=0
 repos=$(find $INFODIR -name \.git -type d -print0 | xargs -0 dirname)
 for repo in $repos ; do
     echo "$repo"
     cd "$repo"
     oldurl=$(git remote -v | head -1 | sed 's/ (fetch)//g')
     # this is in the form 'origin url'
-    newurl=$(echo $oldurl | sed "s|$oldorg|$neworg|")
-    echo '|'$oldurl'|'
-    echo '|'$newurl'|'
-    if [ "$oldurl" == "$newurl" ]; then
-	echo ----
-    fi
-    if [[ "$oldurl" != "$newurl" ]]; then
+    newurl=$(echo "${oldurl}" | sed "s|$oldorg|$neworg|")
+    # note: if oldurl not quoted, it changes tabs to spaces
+    if [[ "${oldurl}" != "${newurl}" ]]; then
 	remote=$(echo $oldurl | sed 's/ .*//')
 	# print origin: old -> new
-	echo $remote: $(echo  $oldurl| sed 's/.* //') "->" $(echo  $newurl| sed 's/.* //')
+	echo "   " $remote: $(echo  $oldurl| sed 's/.* //') "->" $(echo  $newurl| sed 's/.* //')
 	# remove the 'origin' part
+	git remote set-url $newurl
+	nRep=$((nRep + 1))
     else
-	echo "nothing to be updated"
+	echo "   nothing to be updated for ${oldurl}"
+	nLeave=$((nLeave + 1))
     fi
 done
 
+# mv ${DIR}/neworg ${DIR}/oldorg
 cd "$PWD"
+echo $nRep repos updated, $nLeave left alone
 echo "all done :-)"
